@@ -4,6 +4,7 @@ from skmultiflow.trees import HoeffdingTreeClassifier
 from skmultiflow.evaluation import EvaluatePrequential
 from skmultiflow.drift_detection.eddm import EDDM
 from skmultiflow.drift_detection.hddm_a import HDDM_A
+from skmultiflow.drift_detection import PageHinkley
 
 
 def prepare_data(filename):
@@ -49,7 +50,7 @@ def eddm(stream):
 def hddm_a(stream):
     detected_change = []
     detected_warning = []
-    hddm_a = HDDM_A(drift_confidence=0.000001, warning_confidence=0.000005)
+    hddm_a = HDDM_A()
     data_stream = stream
     for i in range(len(stream)):
         hddm_a.add_element(data_stream[i])
@@ -62,9 +63,22 @@ def hddm_a(stream):
     print("HDDM Detected changes: " + str(len(detected_change)))
     print("HDDM Detected warning zones: " + str(len(detected_warning)))
 
+def ph(stream):
+    detected_change = []
+    ph = PageHinkley()
+    data_stream = stream
+    for i in range(len(stream)):
+        ph.add_element(data_stream[i])
+        if ph.detected_change():
+            print('Change has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
+            detected_change.append((data_stream[i]))
+    print("PH Detected changes: " + str(len(detected_change)))
+
+
 data = prepare_data('weatherAUS.csv')
 # check_nulls(data)
 stream = make_stream(data)
-eddm(stream)
+# eddm(stream)
 # hddm_a(stream)
+# ph(stream)
 pass
