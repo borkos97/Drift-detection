@@ -4,7 +4,8 @@ from skmultiflow.trees import HoeffdingTreeClassifier
 from skmultiflow.evaluation import EvaluatePrequential
 from skmultiflow.drift_detection.eddm import EDDM
 from skmultiflow.drift_detection.hddm_a import HDDM_A
-from skmultiflow.drift_detection import PageHinkley
+from skmultiflow.drift_detection import PageHinkley, DDM
+from skmultiflow.drift_detection.hddm_w import HDDM_W
 
 
 def prepare_data(filename):
@@ -22,29 +23,26 @@ def check_nulls(data):
 
 def make_stream(data):
     stream = DataStream(data, y=None, target_idx=-1, n_targets=1, cat_features=None, name=None, allow_nan=False)
-    # ht = HoeffdingTreeClassifier()
-    # evaluator = EvaluatePrequential(show_plot=True, pretrain_size=1000, max_samples=10000)
-    # evaluator.evaluate(stream=stream, model=ht)
     stream = stream.y
     return stream
 
 def eddm(stream):
     detected_change = []
-    detected_warning = []
+    # detected_warning = []
     eddm = EDDM()
     data_stream = stream
     for i in range(len(stream)):
         eddm.add_element(data_stream[i])
-        if eddm.detected_warning_zone():
-            detected_warning.append((data_stream[i]))
-            print("Warning zone has been detected in data: {}"
-                  " - of index: {}".format(data_stream[i], i))
+        # if eddm.detected_warning_zone():
+        #     detected_warning.append((data_stream[i]))
+        #     print("Warning zone has been detected in data: {}"
+        #           " - of index: {}".format(data_stream[i], i))
         if eddm.detected_change():
             detected_change.append((data_stream[i]))
             print("Change has been detected in data: {}"
                   " - of index: {}".format(data_stream[i], i))
     print("EDDM Detected changes: " + str(len(detected_change)))
-    print("EDDM Detected warning zones: " + str(len(detected_warning)))
+    # print("EDDM Detected warning zones: " + str(len(detected_warning)))
 
 
 def hddm_a(stream):
@@ -54,14 +52,14 @@ def hddm_a(stream):
     data_stream = stream
     for i in range(len(stream)):
         hddm_a.add_element(data_stream[i])
-        if hddm_a.detected_warning_zone():
-            detected_warning.append((data_stream[i]))
-            print('Warning zone has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
+        # if hddm_a.detected_warning_zone():
+        #     detected_warning.append((data_stream[i]))
+        #     print('Warning zone has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
         if hddm_a.detected_change():
             detected_change.append((data_stream[i]))
             print('Change has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
-    print("HDDM Detected changes: " + str(len(detected_change)))
-    print("HDDM Detected warning zones: " + str(len(detected_warning)))
+    print("HDDM_A Detected changes: " + str(len(detected_change)))
+    # print("HDDM_A Detected warning zones: " + str(len(detected_warning)))
 
 def ph(stream):
     detected_change = []
@@ -74,11 +72,44 @@ def ph(stream):
             detected_change.append((data_stream[i]))
     print("PH Detected changes: " + str(len(detected_change)))
 
+def hddm_w(stream):
+    detected_change = []
+    # detected_warning = []
+    hddm_w = HDDM_W()
+    data_stream = stream
+    for i in range(len(stream)):
+        hddm_w.add_element(data_stream[i])
+        # if hddm_w.detected_warning_zone():
+        #     print('Warning zone has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
+        #     detected_warning.append((data_stream[i]))
+        if hddm_w.detected_change():
+            print('Change has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
+            detected_change.append((data_stream[i]))
+    print("HDDM_W Detected changes: " + str(len(detected_change)))
+    # print("HDDM_W Detected warning zones: " + str(len(detected_warning)))
+
+def ddm(stream):
+    detected_change = []
+    # detected_warning = []
+    ddm = DDM()
+    data_stream = stream
+    for i in range(len(stream)):
+        ddm.add_element(data_stream[i])
+        # if ddm.detected_warning_zone():
+        #     print('Warning zone has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
+        #     detected_warning.append((data_stream[i]))
+        if ddm.detected_change():
+            print('Change has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
+            detected_change.append((data_stream[i]))
+    print("DDM Detected changes: " + str(len(detected_change)))
+    # print("DDM Detected warning zones: " + str(len(detected_warning)))
 
 data = prepare_data('weatherAUS.csv')
 # check_nulls(data)
 stream = make_stream(data)
-# eddm(stream)
+eddm(stream)
 # hddm_a(stream)
 # ph(stream)
+# hddm_w(stream)
+# ddm(stream)
 pass
