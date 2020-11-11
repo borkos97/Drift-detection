@@ -6,19 +6,21 @@ from skmultiflow.drift_detection import PageHinkley, DDM
 from skmultiflow.drift_detection.hddm_w import HDDM_W
 
 
-def prepare_data(filename):
+def prepare_data(filename, decision):
     data = pd.read_csv(filename, header=0, sep=',', parse_dates=['Date'])
+    check_nulls(data)
     nr_cols_float = list(data.select_dtypes(include='number').columns)
     nr_cols_string = list(data.select_dtypes(include='object').columns)
     data[nr_cols_float] = data[nr_cols_float].fillna(data[nr_cols_float].mean())
-    data.dropna(axis='index', inplace=True)
+    if decision == True:
+        data.dropna(axis='index', inplace=True)
     data['Date'] = pd.to_datetime(data['Date']).sub(pd.Timestamp('2008-12-01')).dt.days
     data = pd.get_dummies(data, columns=nr_cols_string)
     return data
 
 
 def check_nulls(data):
-    print(data.isnull().sum())
+    print(sum(data.isnull().sum()))
 
 
 def make_stream(data):
@@ -44,6 +46,7 @@ def eddm(stream):
                   " - of index: {}".format(data_stream[i], i))
     print("EDDM Detected changes: " + str(len(detected_change)))
     print("EDDM Detected warning zones: " + str(len(detected_warning)))
+    return str('Ilość wykrytych zmian dla algorytmu EDDM wynosi: ' + str(len(detected_change)))
 
 
 def hddm_a(stream):
@@ -61,6 +64,7 @@ def hddm_a(stream):
             print('Change has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
     print("HDDM_A Detected changes: " + str(len(detected_change)))
     print("HDDM_A Detected warning zones: " + str(len(detected_warning)))
+    return str('Ilość wykrytych zmian dla algorytmu HDDM_A wynosi: ' + str(len(detected_change)))
 
 
 def ph(stream):
@@ -73,6 +77,7 @@ def ph(stream):
             print('Change has been detected in data: ' + str(data_stream[i]) + ' - of index: ' + str(i))
             detected_change.append((data_stream[i]))
     print("PH Detected changes: " + str(len(detected_change)))
+    return str('Ilość wykrytych zmian dla algorytmu PH wynosi: ' + str(len(detected_change)))
 
 
 def hddm_w(stream):
@@ -90,6 +95,7 @@ def hddm_w(stream):
             detected_change.append((data_stream[i]))
     print("HDDM_W Detected changes: " + str(len(detected_change)))
     print("HDDM_W Detected warning zones: " + str(len(detected_warning)))
+    return str('Ilość wykrytych zmian dla algorytmu HDDM_W wynosi: ' + str(len(detected_change)))
 
 
 def ddm(stream):
@@ -107,13 +113,17 @@ def ddm(stream):
             detected_change.append((data_stream[i]))
     print("DDM Detected changes: " + str(len(detected_change)))
     print("DDM Detected warning zones: " + str(len(detected_warning)))
+    return str('Ilość wykrytych zmian dla algorytmu DDM wynosi: ' + str(len(detected_change)))
 
 
-data = prepare_data('weatherAUS.csv')
-check_nulls(data)
+data = prepare_data('weatherAUS.csv', True)
 stream = make_stream(data)
-eddm(stream)
-hddm_a(stream)
-ph(stream)
-hddm_w(stream)
-ddm(stream)
+before_drop = str('\nWyniki dla bazy dancyh po dropna\n%s\n%s\n%s\n%s\n%s' % (
+    ddm(stream), eddm(stream), hddm_a(stream), ph(stream), hddm_w(stream)))
+
+data = prepare_data('weatherAUS.csv', False)
+stream = make_stream(data)
+after_drop = str('\nWyniki dla bazy dancyh przed dropna\n%s\n%s\n%s\n%s\n%s' % (
+    ddm(stream), eddm(stream), hddm_a(stream), ph(stream), hddm_w(stream)))
+
+print(before_drop, after_drop)
